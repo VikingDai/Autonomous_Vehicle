@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+
+    <node pkg="vehicle_state_detection" type="odom_generator_v2.py" name="odom_generator" output="screen" />
+    <node pkg="vehicle_state_detection" type="mti_gps_regulator.py" name="mti_gps_regulator" output="screen" />
+    <node pkg="vehicle_state_detection" type="vehicle_gps_regulator.py" name="vehicle_gps_regulator" output="screen" />
+    <node pkg="vehicle_motion_planning" type="reference_path_plotter.py" name="refPath_node" output="screen" />
+
+    <node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d /home/ak209/catkin_ws/rviz_config/state_detection.rviz" />
+
+    <node name="map_bl_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 map odom 100" output="log"/>
+    <node name="map_odom_bl" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 odom base_link 100" output="log"/>
+
+    <node name="ekf_odom_1" pkg="robot_localization" type="ekf_localization_node" clear_params="true">
+
+        <!-- 
+        Use this when fully the params are fully tuned:
+        <rosparam command="load" file="$(find vehicle_state_detection)/src/params/ekf_odom_1.yaml" />
+        -->
+
+        <param name="frequency" value="30" />
+        <param name="sensor_timeout" value="0.1" />
+        <param name="two_d_mode" value="true" />
+
+        <param name="map_frame" value="map" />
+        <param name="odom_frame" value="odom" />
+        <param name="base_link_frame" value="base_link" />
+        <param name="world_frame" value="map" />
+
+        <param name="transform_time_offset" value="0.0" />
+        <param name="transform_timeout" value="0.0" />
+
+        <!--
+          imu0: IMU from gnss 
+          imu1: IMU from vehicle through CAN
+          odom0: odom from vehicle though wheel_encoder and twist info
+          odom1: odom from the output of navsat_transformation_node
+      -->
+        <param name="imu0" value="/mti/sensor/imu"/>
+        <param name="imu1" value="/vehicle/imu/data_raw"/>
+        <param name="odom0" value="/vehicle/odom/data_raw"/>
+        <param name="odom1" value="/odometry/filtered_odom_vehicle"/>
+
+        <rosparam param="imu0_config">[false, false, false, 
+                                       false, false, false,
+                                       false, false, false,
+                                       true,  true,  true,
+                                       true,  true,  true]</rosparam>
+        <rosparam param="imu1_config">[false, false, false,
+                                       false, false, false,
+                                       false, false, false,
+                                       true,  true,  true,
+                                       true,  true,  true]</rosparam>
+        <rosparam param="odom0_config">[false, false, false,
+                                        false, false, true,
+                                        true,  true,  false,
+                                        false, false, false,
+                                        false, false, false]</rosparam>
+        <rosparam param="odom1_config">[true, true, false,
+                                        false, false, false,
+                                        false, false, false,
+                                        false, false, false,
+                                        false, false, false]</rosparam>
+
+        <param name="imu0_differential" value="true"/>
+        <param name="imu1_differential" value="true"/>
+        <param name="odom0_differential" value="false"/>
+        <param name="odom1_differential" value="false"/>
+
+        <param name="imu0_relative" value="false"/>
+        <param name="imu1_relative" value="false"/>
+        <param name="odom0_relative" value="false"/>
+        <param name="odom1_relative" value="false"/>
+
+        <param name="imu0_remove_gravitational_acceleration" value="true"/>
+        <param name="imu1_remove_gravitational_acceleration" value="true"/>
+
+        <param name="publish_tf" value="false" />
+        <param name="print_diagnostics" value="true"/>
+
+        <param name="imu0_queue_size" value="10"/>
+        <param name="imu1_queue_size" value="10"/>
+        <param name="odom0_queue_size" value="10"/>
+        <param name="odom1_queue_size" value="20"/>
+
+        <param name="debug" value="false"/>
+        <param name="debug_out_file" value="debug_ekf_localization.txt"/>
+
+        <rosparam param="process_noise_covariance">
+                 [0.05, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0.05, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0.01, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0.1,  0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0.025,0,    0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0.025,0,    0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0.04, 0,    0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0.01, 0,    0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.01, 0,    0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.01, 0,    0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.01, 0,    0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.01, 0,    
+                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.01  ]</rosparam>
+
+        <rosparam param="initial_estimate_covariance">
+                [1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-6, 0,    
+                 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-6  ]</rosparam>
+
+        <remap from="/odometry/filtered" to="/odometry/filtered_odom" />
+    </node>
+
+    <node pkg="robot_localization" type="navsat_transform_node" name="vehicle_navsat_transform_node" clear_params="true">
+
+        <!-- Placeholders for input remapping. Set your topic names as the "to" values.
+        <remap from="imu/data" to=""/>
+        <remap from="odometry/filtered" to=""/>
+        <remap from="gps/fix" to=""/>
+        -->
+        <param name="frequency" value="30" />
+        <param name="delay" value="0" />
+        <param name="magnetic_declination_radians" value="-0.249625367" />
+        <param name="yaw_offset" value="0.23" />
+        <param name="zero_altitude" value="true" />
+        <param name="broadcast_utm_transform" value="false" />
+        <param name="publish_filtered_gps" value="false" />
+        <param name="use_odometry_yaw" value="true" />
+        <param name="wait_for_datum" value="true" />
+        <rosparam param="datum">[42.275921, -71.798370, 0.0]</rosparam>
+        <!--
+          input: 
+               1. fused odom data from ekf_odom_1: 
+                /odometry/filtered -> /odometry/filtered_odom
+               2. raw gps data from vehicle's GPS driver:
+                  /gps/fix -> /vehicle/gps/fix2
+          -->
+        <remap from="/odometry/filtered" to="/odometry/filtered_odom" />
+        <remap from="/gps/fix" to="/vehicle/gps/fix2" />
+        <!--
+          output:
+               1. fused GPS message:
+                  /gps/filtered -> /gps/filtered_odom_vehicle
+               2. fused odom message:
+              /odometry/gps -> /odometry/filtered_odom_vehicle
+          -->
+        <remap from="/odometry/gps" to="/odometry/filtered_odom_vehicle" />
+        <remap from="/gps/filtered" to="/gps/filtered_odom_vehicle" />
+
+    </node>
+
+
+    <node pkg="robot_localization" type="navsat_transform_node" name="mti_navsat_transform_node" clear_params="true">
+
+        <!-- Placeholders for input remapping. Set your topic names as the "to" values.
+        <remap from="imu/data" to=""/>
+        <remap from="odometry/filtered" to=""/>
+        <remap from="gps/fix" to=""/>
+        -->
+        <param name="frequency" value="30" />
+        <param name="delay" value="0.2" />
+        <param name="magnetic_declination_radians" value="-0.249625367" />
+        <param name="yaw_offset" value="0.22" />
+        <param name="zero_altitude" value="true" />
+        <param name="broadcast_utm_transform" value="false" />
+        <param name="publish_filtered_gps" value="false" />
+        <param name="use_odometry_yaw" value="true" />
+        <param name="wait_for_datum" value="true" />
+        <rosparam param="datum">[42.275921, -71.798370, 0.0]</rosparam>
+        <!--
+          input: 
+               1. fused odom data from ekf_odom_1: 
+                /odometry/filtered -> /odometry/filtered_odo
+               2. raw gps data from vehicle's GPS driver:
+                  /gps/fix -> /vehicle/gps/fix2
+          -->
+        <remap from="/odometry/filtered" to="/odometry/filtered_odom" />
+        <remap from="/gps/fix" to="/mti/gps/fix" />
+        <!--
+          output:
+               1. fused GPS message:
+                  /gps/filtered -> /gps/filtered_odom_mti
+               2. fused odom message:
+              /odometry/gps -> /odometry/filtered_odom_mti
+          -->
+        <remap from="/odometry/gps" to="/odometry/filtered_odom_mti" />
+        <remap from="/gps/filtered" to="/gps/filtered_odom_mti" />
+
+    </node>
+
+</launch>
+

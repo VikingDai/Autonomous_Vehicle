@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+import rospy
+import math, sys, os, datetime, csv
+
+from nav_msgs.msg import Path
+from std_msgs.msg import Header, Float32, Float64
+# from sensor_msgs.msg import Imu
+from tf.transformations import euler_from_quaternion
+from geometry_msgs.msg import TwistStamped, Vector3Stamped, QuaternionStamped, Pose, PoseStamped, Point, Quaternion, TwistStamped
+# from gps_common.msg import GPSFix, GPSStatus
+# from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
+
+class DataCollector:
+
+	def __init__(self):
+		rospy.init_node('Data_Collector', anonymous=True)
+
+		# Setup subscribers
+		rospy.Subscriber("/vehicle/MTiPose", PoseStamped, self.poseUpdate)
+		rospy.Subscriber("/vehicle/twist", TwistStamped, self.twistUpdate)
+
+		# Start flage will mark a certain initialized function running only once.
+		self.startFlag = True
+
+		self.latitude = 0
+		self.longitude = 0
+		self.roll = 0
+		self.pitch = 0
+		self.yaw = 0
+
+		self.startdateNTime = 0
+		self.startROSTime = 0
+
+		self.vel_linear = 0
+		self.vel_angular = 0
+
+	def poseUpdate(self, data):
+		# decode the PoseStamped to latitude and longtitute, and assign them to attribute
+		self.longitude = data.pose.position.x
+		self.latitude = data.pose.position.y
+		quaternion = (data.pose.orientation.x,
+					  data.pose.orientation.y, 
+					  data.pose.orientation.z,
+					  data.pose.orientation.w,)
+		[self.roll, self.pitch, self.yaw] = euler_from_quaternion(quaternion)
+		self.callbackMainProgram()
+
+	def twistUpdate(self, data):
+		self.vel_linear = data.twist.linear.x
+		self.vel_angular = data.twist.angular.z
+		self.callbackMainProgram()
+
+	# ********************** Recorder functions *******************************
+
+	def configCSV(self):
+		self.startdateNTime = str(datetime.datetime.now())
+		target_path = "/home/ak209/catkin_ws/csv_data"
+		with open(str(target_path) + "/" + self.startdateNTime + '.csv', 'wb') as csvfile:
+			filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+			initialMark = ['Time', 'Latitude', 'Longitute', 'Linear_velocity', 'Angular_velocity', 'roll', 'pitch', 'yaw']
+			filewriter.writerow(initialMark)
+
+	def writeData(self):
+		target_path = "/home/ak209/catkin_ws/csv_data"
+		with open(str(target_path) + "/" + self.startdateNTime + '.csv', 'a') as csvfile:
+			filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+			dataInRow = [str(rospy.Time.now() - self.startROSTime), str(self.latitude), str(self.longitude), str(self.vel_linear), str(self.vel_angular), str(self.roll), str(self.pitch), str(self.yaw)]
+			filewriter.writerow(dataInRow)
+
+	def callbackMainProgram(self):
+
+		# Initialization. Runs once.
+		if self.startFlag == True:
+			print("received!")
+			self.configCSV()
+			self.startROSTime = rospy.Time.now()
+			self.startFlag = False
+
+		# write geo data to the csv file
+		self.writeData()
+
+
+
+def main():
+
+	# name space define
+	node = DataCollector()
+	rospy.spin()
+
+
+if __name__ == '__main__':
+	try:
+		main()
+	except rospy.ROSInterruptException:
+		pass
+
+

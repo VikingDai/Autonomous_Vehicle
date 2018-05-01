@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import PoseStamped, TwistStamped
+import time
+
+class PathPlanningTesterNode:
+
+	def __init__(self):
+		rospy.init_node('Path_Planning_Tester', anonymous=True)
+		self.pub_pose = rospy.Publisher("/vehicle/MTiPose", PoseStamped, queue_size=10)
+		self.pub_vel = rospy.Publisher("/vehicle/twist", TwistStamped, queue_size=10)
+
+		self.psudoPoseStamped = PoseStamped()
+		self.psudoPoseStamped.pose.position.x = -71.798381
+		self.psudoPoseStamped.pose.position.y = 42.2758512
+		self.psudoPoseStamped.pose.orientation.x = 0.00473246583715
+		self.psudoPoseStamped.pose.orientation.y = 0.0132181085646
+		self.psudoPoseStamped.pose.orientation.z = -0.628833651543
+		self.psudoPoseStamped.pose.orientation.w = 0.777413070202
+
+		self.psudoTwistStamped = TwistStamped()
+		self.psudoTwistStamped.twist.linear.x = 0.1
+
+	def publishInfo(self):
+		self.pub_pose.publish(self.psudoPoseStamped)
+		self.pub_vel.publish(self.psudoTwistStamped)
+		
+
+def main():
+	node = PathPlanningTesterNode()
+	t = time.time()
+	while not rospy.is_shutdown():
+		node.publishInfo()
+		rospy.loginfo('publishing messages...')
+		rospy.sleep(0.5)
+	rospy.loginfo('Done')
+	# rospy.spin()
+
+if __name__ == '__main__':
+	try:
+		main()
+	except rospy.ROSInterruptException:
+		pass

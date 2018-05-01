@@ -1,0 +1,34 @@
+<!-- -*- mode: XML -*- -->
+<!-- run velodyne_pointcloud/CloudNodelet in a nodelet manager for a VLP-16 -->
+
+<launch>
+
+  <!-- declare arguments with default values -->
+
+
+  <!-- start nodelet manager and driver nodelets -->
+  <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
+
+  <include file="$(find delphi_esr)/launch/delphi_esr.launch" />
+  <include file="$(find delphi_srr)/launch/delphi_srr_both.launch" />
+  <include file="$(find dbw_mkz_joystick_demo)/launch/joystick_demo.launch" />
+  <include file="$(find pointgrey_camera_driver)/launch/camera.launch" />
+  <include file="$(find xsens_driver)/launch/xsens_driver.launch" />
+
+
+
+
+  <!--
+  <include file="$(find dbw_mkz_can)/launch/dbw.launch" />
+  <include file="$(find dbw_mkz_description)/launch/rviz.launch" />
+
+-->
+
+
+
+
+
+
+
+
+</launch>
