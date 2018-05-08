@@ -3,10 +3,7 @@
 
 <launch>
  
-  <include file="$(find pointgrey_camera_driver)/launch/camera.launch">
-  	<remap from="/imu/data" to="/mti/sensor/imu"/>
-  	<remap from="/fix" to="/mti/sensor/fix"/>
-  </include>
+  <include file="$(find pointgrey_camera_driver)/launch/camera.launch"/>
   <!--<node pkg="xsens_driver" name="mtnode2" type="mtnode.py" output="screen" />-->
   <include file="$(find xsens_driver)/launch/xsens_driver.launch" />
 

@@ -23,5 +23,8 @@
 		<rosparam param="angular_velocity_covariance_diagonal" subst_value="True">$(arg angular_velocity_covariance_diagonal)</rosparam>
 		<rosparam param="linear_acceleration_covariance_diagonal" subst_value="True">$(arg linear_acceleration_covariance_diagonal)</rosparam>
 		<rosparam param="orientation_covariance_diagonal" subst_value="True">$(arg orientation_covariance_diagonal)</rosparam>
+
+		<remap from="/imu/data" to="/mti/sensor/imu"/>
+    	<remap from="/fix" to="/mti/sensor/fix"/>
 	</node>
 </launch>

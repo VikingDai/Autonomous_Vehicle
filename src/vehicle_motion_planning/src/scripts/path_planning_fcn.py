@@ -18,10 +18,13 @@ class PathPlanningModule:
 
 		# define the car's instant state with the format: [t, x, y, dx, dy]
 		self.wayPointList = []
-		# psudo velocity set as 2.5m/s.
+		# psudo velocity set as 1m/s.
 		self.psudoVel = 1
-		self.trajNum = 3;
+		self.trajNum = 100;
 		self.dataFileName = 'coarseState_1.csv'
+
+		self.x_offset = -0
+		self.y_offset = 0
 		self.readWaypoints();
 
 	def generateTrajectories(self, x, y, dx, dy):

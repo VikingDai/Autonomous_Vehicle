@@ -13,8 +13,8 @@ class OdomGenerator():
 
 		rospy.init_node('odom_generator', anonymous=True)
 
-		self.sub_datum = rospy.Subscriber("/fix", NavSatFix, self.datumUpdate)
-		rospy.Subscriber("/imu/data", Imu, self.odomOrientationUpdate)
+		self.sub_datum = rospy.Subscriber("/mti/sensor/fix", NavSatFix, self.datumUpdate)
+		rospy.Subscriber("/mti/sensor/imu", Imu, self.odomOrientationUpdate)
 		rospy.Subscriber("/vehicle/wheel_speed_report", WheelSpeedReport, self.odomPositionUpdate)
 		rospy.Subscriber("/vehicle/twist", TwistStamped, self.odomTwistUpdate)
 
@@ -33,7 +33,7 @@ class OdomGenerator():
 		self.odomYaw = 0
 
 		self.canBusTimeInterval = 0.01
-		self.wheelRadius = 0.34036 #FIXME Need measurements!
+		self.wheelRadius = 0.34036 #FIXME Need more accurate measurements!
 		self.trackWidth = 1.57861
 
 		self.datumReceived  = False
@@ -46,6 +46,7 @@ class OdomGenerator():
 	def publishOdom(self):
 		while not rospy.is_shutdown():
 			rospy.loginfo("waiting for Subscribers...")
+			# print(self.datumReceived, self.orientationReceived, self.twistReceived, self.wheelSigReceived)
 			rospy.sleep(0.5)
 			while not rospy.is_shutdown() and self.datumReceived and self.orientationReceived and self.twistReceived and self.wheelSigReceived:
 				self.publishOdomMsg()

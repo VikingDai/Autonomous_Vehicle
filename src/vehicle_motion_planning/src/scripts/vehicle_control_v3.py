@@ -47,19 +47,13 @@ class VehicleController:
 		self.steerDeltaRatio = -14.9
 		self.wheelbase = 2.84988
 
-		self.degree2meter = 113119.48381195657
-
-		self.refLat = 42.2757474
-		self.refLong = -71.7983398
-
+		self.throttle_PadalOffset = 0.03
+		self.brake_PadalOffset = 0.12
 
 		self.rate = 1
 		self.frequency = 100
 
 		self.poseReceived = False
-
-		self.currentYaw = 0
-
 
 		# auto-running function:
 		self.mainProgram()
@@ -191,15 +185,15 @@ class VehicleController:
 
 				K, S, E = lqr(A, B, Q, R)
 
-				errorState = desiredState - state
+				errorState = state - desiredState
 				errorState[2] = self.wrapToPi(errorState[2])
 				# print("Error State: ["+str(np.float32(errorState[0][0]))+", "+str(np.float32(errorState[1][0]))+", "+str(np.float32(errorState[2][0]))+"]")
 				
-				u = np.dot(-1*K, errorState) + np.array([[vf],[desdelta]])
-				u[0] = self.limitRange(u[0], self.maxVel, 0);
+				u = np.dot(K, errorState) + np.array([[vf],[desdelta]])
+				u[0] = -1*self.limitRange(u[0], self.maxVel, -1*self.maxVel);
 				u[1] = self.limitRange(u[1], self.maxDelta, -1*self.maxDelta)
-				print("Input velocity: "+str(u[0])+", Input steering andle: "+str(u[1]))
-
+				# print("Input velocity: "+str(u[0])+", Input steering andle: "+str(u[1]))
+				print(u[0][0])
 
 				self.throttleBreakCtrl(u[0][0])
 				self.steeringCtrl(u[1][0])
@@ -211,17 +205,21 @@ class VehicleController:
 
 	# lower-level throttle/break and steering controller
 	def throttleBreakCtrl(self, desiredVel):
-		vel_feedback = self.linVel
-		errorVel = desiredVel - vel_feedback
-		if errorVel > 0:
-			throttle_pwr = 0.025*errorVel
+		# vel_feedback = self.linVel
+		# errorVel = desiredVel - vel_feedback
+		if desiredVel > 0.5:
+			throttle_pwr = self.throttle_PadalOffset+0.01*desiredVel
 			self.publishThrottleCmd(throttle_pwr)
 			self.publishBrakeCmd(0)
 
-		elif errorVel < 0:
-			brake_pwr = 0.025*errorVel
+		elif desiredVel < 0:
+			brake_pwr = self.brake_PadalOffset+0.02*abs(desiredVel)
 			self.publishThrottleCmd(0)
 			self.publishBrakeCmd(brake_pwr)
+
+		else:
+			self.publishThrottleCmd(0)
+			self.publishBrakeCmd(0)
 
 	def steeringCtrl(self, desiredDeltaAngle):
 		steer_angle = desiredDeltaAngle*self.steerDeltaRatio
