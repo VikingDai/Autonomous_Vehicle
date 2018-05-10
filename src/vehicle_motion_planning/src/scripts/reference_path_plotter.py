@@ -7,10 +7,18 @@ from numpy import genfromtxt
 global msg
 global pub_path
 
+global x_offset
+global y_offset
+
+x_offset = 0
+y_offset = -2
+
 # support functions
 def pubWaypoints():
 	global msg
 	global pub_path
+	global x_offset
+	global y_offset
 	# read the raw waypoints from the .csv file
 	file_name = "ref_path_points.csv"
 	target_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ),"..","data"))+"/"
@@ -20,12 +28,12 @@ def pubWaypoints():
 	msg.header.frame_id = "map"
 	i = 0
 	for waypoint in wayPointList:
-		x = waypoint[1]
-		y = waypoint[2]
+		x = waypoint[1] + x_offset
+		y = waypoint[2] + y_offset
 		addToPath(x,y,i)
 		i=i+1
-	x = wayPointList[0][1]
-	y = wayPointList[0][2]
+	x = wayPointList[0][1] + x_offset
+	y = wayPointList[0][2] + y_offset
 	addToPath(x,y,i)
 	pub_path.publish(msg)
 	

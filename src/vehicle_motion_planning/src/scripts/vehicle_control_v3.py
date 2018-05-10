@@ -208,7 +208,7 @@ class VehicleController:
 		# vel_feedback = self.linVel
 		# errorVel = desiredVel - vel_feedback
 		if desiredVel > 0.5:
-			throttle_pwr = self.throttle_PadalOffset+0.01*desiredVel
+			throttle_pwr = self.throttle_PadalOffset+0.007*desiredVel
 			self.publishThrottleCmd(throttle_pwr)
 			self.publishBrakeCmd(0)
 

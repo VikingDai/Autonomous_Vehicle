@@ -12,7 +12,7 @@ Panels:
         - /ekf_out1/Shape1
         - /ekf_out1/Covariance1
       Splitter Ratio: 0.498559088
-    Tree Height: 747
+    Tree Height: 359
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties

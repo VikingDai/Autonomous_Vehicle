@@ -19,12 +19,12 @@ class PathPlanningModule:
 		# define the car's instant state with the format: [t, x, y, dx, dy]
 		self.wayPointList = []
 		# psudo velocity set as 1m/s.
-		self.psudoVel = 1
+		self.psudoVel = 0.6
 		self.trajNum = 100;
 		self.dataFileName = 'coarseState_1.csv'
 
-		self.x_offset = -0
-		self.y_offset = 0
+		self.x_offset = 0
+		self.y_offset = -2
 		self.readWaypoints();
 
 	def generateTrajectories(self, x, y, dx, dy):
@@ -57,8 +57,8 @@ class PathPlanningModule:
 		vehicleX = vehicleState[1]
 		vehicleY = vehicleState[2]
 		for i in range (0, len(self.wayPointList)):
-			wayPointX = self.wayPointList[i][1]
-			wayPointY = self.wayPointList[i][2]
+			wayPointX = self.wayPointList[i][1] + self.x_offset
+			wayPointY = self.wayPointList[i][2] + self.y_offset
 			distance = (wayPointX-vehicleX)**2+(wayPointY-vehicleY)**2
 			if distance <= shortestDistance:
 				shortestDistance = distance
@@ -75,5 +75,7 @@ class PathPlanningModule:
 			tempState = self.wayPointList[(wayPointIndex+i)%listLength]
 			accTime = accTime + tempState[0]
 			tempState[0] = accTime
+			tempState[1] = tempState[1]+self.x_offset
+			tempState[2] = tempState[2]+self.y_offset
 			waypointSegmentList[i] = tempState
 		return generate_traj(waypointSegmentList)
