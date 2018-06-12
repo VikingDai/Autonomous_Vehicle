@@ -24,7 +24,7 @@ class PathPlanningModule:
 		self.dataFileName = 'coarseState_1.csv'
 
 		self.x_offset = 0
-		self.y_offset = -2
+		self.y_offset = -3
 		self.readWaypoints();
 
 	def generateTrajectories(self, x, y, dx, dy):

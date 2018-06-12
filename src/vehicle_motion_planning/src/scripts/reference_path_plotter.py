@@ -11,7 +11,7 @@ global x_offset
 global y_offset
 
 x_offset = 0
-y_offset = -2
+y_offset = -3
 
 # support functions
 def pubWaypoints():

@@ -2,5 +2,5 @@
 
 <launch>
 	<node pkg="vehicle_motion_planning" type="reference_path_plotter.py" name="refPath_node" output="screen" />
-	<node pkg="vehicle_motion_planning" type="vehicle_control_v3.py" name="vehicle_control_node" output="screen" />
+	<node pkg="vehicle_motion_planning" type="vehicle_control_v4.py" name="vehicle_control_node" output="screen" />
 </launch>

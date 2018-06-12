@@ -20,7 +20,7 @@
 
     <node pkg="robot_localization" type="navsat_transform_node" name="MTi_navsat_transform_node" clear_params="true">
 
-        <param name="frequency" value="30" />
+        <param name="frequency" value="50" />
         <param name="delay" value="0" />
         <param name="magnetic_declination_radians" value="-0.249625367" />
         <param name="yaw_offset" value="0.23" />

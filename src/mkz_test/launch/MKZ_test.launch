@@ -20,17 +20,4 @@
  <include file="$(find dbw_mkz_joystick_demo)/launch/joystick_demo.launch" />
 
 
-  <!--
-  <include file="$(find dbw_mkz_can)/launch/dbw.launch" />
-  <include file="$(find dbw_mkz_description)/launch/rviz.launch" />
- <include file="$(find dbw_mkz_joystick_demo)/launch/joystick_demo.launch" />
--->
-
-
-
-
-
-
-
-
 </launch>

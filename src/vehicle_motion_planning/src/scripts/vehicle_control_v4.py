@@ -8,6 +8,7 @@ from geometry_msgs.msg import TwistStamped, PoseStamped
 from dbw_mkz_msgs.msg import SteeringCmd, ThrottleCmd, BrakeCmd, GearCmd
 from custom_msgs.msg import positionEstimate, orientationEstimate
 from path_planning_fcn import PathPlanningModule
+from pid import PID
 
 class Gearbox():
 	NONE, PARK, REVERSE, NEUTRAL, DRIVE, LOW = range(6)
@@ -20,6 +21,7 @@ class VehicleController:
 		
 		# Setup publishers and subscribers
 		rospy.Subscriber("/odometry/filtered_odom", Odometry, self.poseUpdate)
+		rospy.Subscriber("/mti/sensor/velocity", TwistStamped, self.speedUpdate)
 
 		self.steering_pub = rospy.Publisher('/vehicle/steering_cmd', SteeringCmd, queue_size=1)
 		self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd', ThrottleCmd, queue_size=1)
@@ -54,6 +56,10 @@ class VehicleController:
 		self.frequency = 100
 
 		self.poseReceived = False
+		self.maxBrakeTorque = 3250
+
+
+		self.pidCtrller = PID(7, 0.00, 4)
 
 		# auto-running function:
 		self.mainProgram()
@@ -83,7 +89,7 @@ class VehicleController:
 		startingTime = time.time()
 		while not rospy.is_shutdown() and (time.time()-startingTime < 3):
 			self.publishGearCmd(Gearbox.DRIVE)
-			self.publishBrakeCmd(0.8)
+			self.publishBrakeCmd(0.8*self.maxBrakeTorque)
 			
 	# Callback function of subscribers:
 	def poseUpdate(self, data):
@@ -94,10 +100,13 @@ class VehicleController:
 					  data.pose.pose.orientation.z,
 					  data.pose.pose.orientation.w)
 		[roll, pitch, yaw] = euler_from_quaternion(quaternion)
-		self.linVel = data.twist.twist.linear.x
+		# self.linVel = data.twist.twist.linear.x
 		self.vehicleState[2] = self.linVel*math.cos(yaw)
 		self.vehicleState[3] = self.linVel*math.sin(yaw)
 		self.poseReceived = True
+
+	def speedUpdate(self, data):
+		self.linVel = np.sqrt(data.twist.linear.x**2 + data.twist.linear.y**2 + data.twist.linear.z**2)
 
 	# Generate trajectories:
 	def getTrajectories(self):
@@ -192,9 +201,10 @@ class VehicleController:
 				u[0] = -1*self.limitRange(u[0], self.maxVel, -1*self.maxVel);
 				u[1] = self.limitRange(u[1], self.maxDelta, -1*self.maxDelta)
 				# print("Input velocity: "+str(u[0])+", Input steering andle: "+str(u[1]))
-				print(u[0][0])
+				# print(u[0][0])
 
 				self.throttleBreakCtrl(u[0][0])
+				# self.throttleBreakCtrl(1)
 				self.steeringCtrl(u[1][0])
 
 				self.publishCurrentPose()
@@ -204,21 +214,19 @@ class VehicleController:
 
 	# lower-level throttle/break and steering controller
 	def throttleBreakCtrl(self, desiredVel):
-		# vel_feedback = self.linVel
-		# errorVel = desiredVel - vel_feedback
-		if desiredVel > 0.5:
-			throttle_pwr = self.throttle_PadalOffset+0.007*desiredVel
-			self.publishThrottleCmd(throttle_pwr)
+		error = desiredVel - self.linVel
+		print(self.linVel)
+		output = self.pidCtrller.step(error, 0.02)
+		if output > 0:
+			throttleVal = output*0.01
+			self.publishThrottleCmd(throttleVal)
 			self.publishBrakeCmd(0)
-
-		elif desiredVel < 0:
-			brake_pwr = self.brake_PadalOffset+0.02*abs(desiredVel)
-			self.publishThrottleCmd(0)
-			self.publishBrakeCmd(brake_pwr)
-
+			# print(self.linVel, throttleVal)
 		else:
+			brakeVal = -900*output
 			self.publishThrottleCmd(0)
-			self.publishBrakeCmd(0)
+			self.publishBrakeCmd(brakeVal)
+			# print(self.linVel, brakeVal)
 
 	def steeringCtrl(self, desiredDeltaAngle):
 		steer_angle = desiredDeltaAngle*self.steerDeltaRatio
@@ -242,12 +250,12 @@ class VehicleController:
 		rospy.loginfo('Controller program terminated. The vehicle stops.')
 		while abs(self.linVel) > 0.01:
 			self.publishThrottleCmd(0)
-			self.publishBrakeCmd(0.5)
+			self.publishBrakeCmd(0.5*self.maxBrakeTorque)
 
 		startingTime = time.time()
 		while not rospy.is_shutdown() and (time.time()-startingTime < 3):
 			self.publishGearCmd(Gearbox.PARK)
-			self.publishBrakeCmd(0.8)
+			self.publishBrakeCmd(0.8*self.maxBrakeTorque)
 
 
 	# throttle, break, gear and steering publishers
@@ -268,7 +276,7 @@ class VehicleController:
 	def publishBrakeCmd(self, pedalVal):
 		msg = BrakeCmd()
 		msg.pedal_cmd = pedalVal
-		msg.pedal_cmd_type = 2
+		msg.pedal_cmd_type = 3
 		'''
 		pedal_cmd_type=1: Unitless, range 0.15 to 0.50
 					  =2: Percent of maximum torque, range 0 to 1

@@ -26,5 +26,6 @@
 
 		<remap from="/imu/data" to="/mti/sensor/imu"/>
     	<remap from="/fix" to="/mti/sensor/fix"/>
+    	<remap from="/velocity" to="/mti/sensor/velocity"/>
 	</node>
 </launch>
