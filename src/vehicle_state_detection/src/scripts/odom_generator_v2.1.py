@@ -46,6 +46,7 @@ class OdomGenerator():
 	def publishOdom(self):
 		while not rospy.is_shutdown():
 			rospy.loginfo("waiting for Subscribers...")
+			# indicate if all the signals to be received.
 			print(self.datumReceived, self.orientationReceived, self.twistReceived, self.wheelSigReceived)
 			rospy.sleep(0.5)
 			while not rospy.is_shutdown() and self.orientationReceived and self.twistReceived and self.wheelSigReceived:

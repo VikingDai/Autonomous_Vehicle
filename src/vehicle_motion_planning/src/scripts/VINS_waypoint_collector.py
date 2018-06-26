@@ -74,6 +74,7 @@ class WaypointCollector():
 		else:
 			pass
 
+		# target path is in dat folder in the previous directory.
 		target_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ),"..","data"))+"/"
 		file_name = 'dynamic_waypoints.csv'
 		with open(str(target_path)+file_name, 'wb') as csvfile:
