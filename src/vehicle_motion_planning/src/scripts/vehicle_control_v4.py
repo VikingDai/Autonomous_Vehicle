@@ -6,7 +6,6 @@ from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import TwistStamped, PoseStamped
 from dbw_mkz_msgs.msg import SteeringCmd, ThrottleCmd, BrakeCmd, GearCmd
-from custom_msgs.msg import positionEstimate, orientationEstimate
 from path_planning_fcn import PathPlanningModule
 from pid import PID
 
@@ -20,7 +19,7 @@ class VehicleController:
 		rospy.init_node('vehicle_control_node', anonymous=True)
 		
 		# Setup publishers and subscribers
-		rospy.Subscriber("/odometry/filtered_odom", Odometry, self.poseUpdate)
+		rospy.Subscriber("/odometry/filtered_out", Odometry, self.poseUpdate)
 		rospy.Subscriber("/mti/sensor/velocity", TwistStamped, self.speedUpdate)
 
 		self.steering_pub = rospy.Publisher('/vehicle/steering_cmd', SteeringCmd, queue_size=1)
@@ -58,8 +57,8 @@ class VehicleController:
 		self.poseReceived = False
 		self.maxBrakeTorque = 3250
 
-
-		self.pidCtrller = PID(7, 0.00, 4)
+		# coefficients of PID
+		self.pidCtrller = PID(2, 0.00, 0)
 
 		# auto-running function:
 		self.mainProgram()

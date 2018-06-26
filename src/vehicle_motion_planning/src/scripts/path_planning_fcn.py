@@ -21,10 +21,10 @@ class PathPlanningModule:
 		# psudo velocity set as 1m/s.
 		self.psudoVel = 0.6
 		self.trajNum = 100;
-		self.dataFileName = 'coarseState_1.csv'
+		self.dataFileName = 'dynamic_waypoints.csv'
 
 		self.x_offset = 0
-		self.y_offset = -3
+		self.y_offset = 0
 		self.readWaypoints();
 
 	def generateTrajectories(self, x, y, dx, dy):

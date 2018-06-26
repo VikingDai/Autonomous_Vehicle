@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+	<node pkg="vehicle_state_detection" type="odom_generator_v2.1.py" name="odom_generator" output="screen" />
+	<node pkg="vehicle_state_detection" type="vins_odom_generator.py" name="VINS_position_sampler" output="screen" />
+
+
+    <node name="map_bl_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 map odom 100" output="log"/>
+    <node name="odom_bl_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 odom base_link 100" output="log"/>
+    <node name="bl_imu_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 base_link imu 100" output="log"/>
+    <node name="world_map_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 world map 100" output="log"/>
+
+
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_odom" clear_params="true">
+        <rosparam command="load" file="$(find vehicle_state_detection)/src/params/ekf_odom+dual_IMU+VINS.yaml" />
+        <remap from="/odometry/filtered" to="/odometry/filtered_out" />
+    </node>
+
+</launch>

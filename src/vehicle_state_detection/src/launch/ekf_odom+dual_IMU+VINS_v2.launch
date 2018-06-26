@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
+	<node pkg="vehicle_state_detection" type="odom_generator_v2.1.py" name="odom_generator" output="screen" />
+	<node pkg="vehicle_state_detection" type="vins_odom_generator.py" name="VINS_position_sampler" output="screen" />
 
-    <!-- start odometry estimation script: -->
-    <node pkg="vehicle_state_detection" type="odom_generator_v2.1.py" name="odom_generator" output="screen" />
 
-    <!-- start Rviz -->
-    <node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d /home/ak209/catkin_ws/rviz_config/state_detection.rviz" />
-
-    <!-- tf static publisher command: -->
     <node name="map_bl_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 map odom 100" output="log"/>
     <node name="odom_bl_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 odom base_link 100" output="log"/>
     <node name="bl_imu_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 base_link imu 100" output="log"/>
+    <node name="world_map_tf" pkg="tf" type="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 1 world map 100" output="log"/>
 
-    <!-- start ekf_localization -->
+
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_odom" clear_params="true">
-        <rosparam command="load" file="$(find vehicle_state_detection)/src/params/ekf_odom+dual_IMU+MTi_GPS.yaml" />
-        <remap from="/odometry/filtered" to="/odometry/filtered_odom" />
+        <rosparam command="load" file="$(find vehicle_state_detection)/src/params/ekf_odom+dual_IMU+VINS_v2.yaml" />
+        <remap from="/odometry/filtered" to="/odometry/filtered_out" />
     </node>
 
-    <!-- start navsat_transform -->
+	<!-- start navsat_transform -->
     <node pkg="robot_localization" type="navsat_transform_node" name="MTi_navsat_transform_node" clear_params="true">
 
         <param name="frequency" value="50" />
         <param name="delay" value="0" />
         <param name="magnetic_declination_radians" value="-0.249625367" />
-        <param name="yaw_offset" value="0.23" />
+        <param name="yaw_offset" value="0" />
         <param name="zero_altitude" value="true" />
         <param name="broadcast_utm_transform" value="false" />
         <param name="publish_filtered_gps" value="false" />
         <param name="use_odometry_yaw" value="true" />
-        <param name="wait_for_datum" value="true" />
-        <rosparam param="datum">[42.275921, -71.798370, 0.0]</rosparam>
+        <param name="wait_for_datum" value="false" />
+
         <!--
           input: 
                1. fused odom data from ekf_odom: 
@@ -39,7 +36,7 @@
                2. raw gps data from MTi GPS driver:
                   /gps/fix -> /vehicle/gps/fix2
           -->
-        <remap from="/odometry/filtered" to="/odometry/filtered_odom" />
+        <remap from="/odometry/filtered" to="/vins/filtered_odom" />
         <remap from="/gps/fix" to="/mti/sensor/fix" />
         <!--<remap from="/gps/fix" to="/vehicle/gps/fix2" />-->
         <!--
@@ -54,6 +51,4 @@
 
     </node>
 
-
 </launch>
-

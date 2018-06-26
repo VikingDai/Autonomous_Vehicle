@@ -46,9 +46,9 @@ class OdomGenerator():
 	def publishOdom(self):
 		while not rospy.is_shutdown():
 			rospy.loginfo("waiting for Subscribers...")
-			# print(self.datumReceived, self.orientationReceived, self.twistReceived, self.wheelSigReceived)
+			print(self.datumReceived, self.orientationReceived, self.twistReceived, self.wheelSigReceived)
 			rospy.sleep(0.5)
-			while not rospy.is_shutdown() and self.datumReceived and self.orientationReceived and self.twistReceived and self.wheelSigReceived:
+			while not rospy.is_shutdown() and self.orientationReceived and self.twistReceived and self.wheelSigReceived:
 				self.publishOdomMsg()
 				rospy.sleep(0.02)
 
@@ -87,6 +87,7 @@ class OdomGenerator():
 				theta_rad = left_wheel_dist / inner_radius
 				delta_x = -1*(1-math.cos(theta_rad))*(self.trackWidth/2 + inner_radius)
 				delta_y = math.sin(theta_rad)*(self.trackWidth/2 + inner_radius)
+				
 			#coordinate transformation:
 			turning_rad = math.atan2(delta_y, delta_x)
 			movement_length = math.sqrt(delta_x**2 + delta_y**2)
